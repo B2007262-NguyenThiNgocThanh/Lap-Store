@@ -1,124 +1,99 @@
 // //Ca làm việc
-// const { Mongoose } = require("mongoose");
-// const MongoDB = require("../utils/mongodb.util");
-// const ApiError = require("../api-error");
-// const Shift = require("../models/product.model");
+const ShiftManage = require("../managements/shift.manage");
+const MongoDB = require("../utils/mongodb.util");
+const ApiError = require("../api-error");
 
-// //tạo và lưu ca làm việc mới
-// exports.createShift = async (req, res, next) => {
+//tạo và lưu ca làm việc mới
+exports.createShift = async (req, res, next) => {
+    if(!req.body?.name){
+        return next(new ApiError(400, "Name can not be empty !"));
+    }
 
-//     if(!req.body?.shiftName){
-//         return next(new ApiError(400, "Name can not be empty"));
-//     }
-
-//     try{
-//         const shifts = await Shift.create(req.body);
-//         return res.status(201).json({
-//             success: true,
-//             shifts,
-//         });
-//     }catch(error){
-//         return next(
-//             new ApiError(500, "Đã xảy ra lỗi khi truy xuất ca làm việc.")
-//         );
-//     }
-// };
+    try{
+        const shiftManage = new ShiftManage(MongoDB.client);
+        const shift = await shiftManage.create(req.body);
+        return res.send(shift);
+    }catch(error){
+        return next(
+            new ApiError(500, "Đã xảy ra lỗi khi truy xuất ca làm việc.")
+        );
+    }
+};
 
 
-// exports.findAllShift = async (req, res, next) => {
-//     try{
-//         const shifts = await Shift.find();
-//         return res.status(201).json({
-//             success: true,
-//             shifts,
-//         });
-//     }catch(error){
-//         return next(
-//             new ApiError(500, "Đã xảy ra lỗi khi truy xuất ca làm việc.")
-//         );
-//     }
-// };
+exports.findAllShift = async (req, res, next) => {
+    let shifts = [];
 
-// //find a single shift with an id
-// exports.findOneShift = async(req, res, next) => {
-//     const shift = await Shift.findById(req.params.id);
-//     if(!shift) {
-//         return next(new ApiError(404,"ca làm việc không tồn tại!"));
-//     }
-//     try{
-//         res.status(200).json({
-//             success: true,
-//             product,
-//         })
-//     }catch (error) {
-//         return next(
-//             new ApiError(500, "Đã xảy ra lỗi khi truy xuất ca làm việc.")
-//         );
-//     }
-// };
+    try{
+        const shiftManage = new ShiftManage(MongoDB.client);
+        const { name } = req.query;
+        if (name){
+            shifts = await shiftManage.findByName(name);
+        }
+        else{
+            shifts = await shiftManage.find({});
+        }
+    }catch(error){
+        return next(
+            new ApiError(500, "Đã xảy ra lỗi khi truy xuất ca làm việc.")
+        );
+    }
+    return res.send(shifts);
+};
 
-// //Update a shift by the id in the request
-// exports.updateShift = async (req, res, next) => {
-//     let shift = Shift.findById(req.params.id);
-//     if(!shift) {
-//         return next(new ApiError(404,"Ca làm việc không tồn tại!"));
-//     }
-//     try{
-//         shift = await Shift.findByIdAndUpdate(req.params.id, req.body, {
-//             new:true,
-//             runValidators: true,
-//             useFindAndModify: false
-//         });
-//         res.status(200).json({
-//             success: true,
-//             shift,
-//             message: "Ca làm việc được cập nhật thành công!"
-//         })
-//     }catch (error) {
-//         return next(
-//             new ApiError(500, "Đã xảy ra lỗi khi truy xuất Ca làm việc.")
-//         );
-//     }
+//find a single shift with an id
+exports.findOneShift = async(req, res, next) => {
+    try{
+        const shiftManage = new ShiftManage(MongoDB.client);
+        const shift = await shiftManage.findById(req.params.id);
+        if(!shift) {
+            return next(new ApiError(404,"ca làm việc không tồn tại!"));
+        }
+        return res.send(shift);
+    }
+    catch (error) {
+        return next(
+            new ApiError(500, `Đã xảy ra lỗi khi truy xuất ca làm việc với id = ${eq.params.id}`)
+        );
+    }
+};
+
+//Update a shift by the id in the request
+exports.updateShift = async (req, res, next) => {
+    if(Object.keys(req.body).length === 0){
+        return next(new ApiError(400, "Dữ liệu cập nhật không thể rỗng !"));
+    }
+    try{
+        const shiftManage = new ShiftManage(MongoDB.client);
+        shift = await shiftManage.update(req.params.id, req.body);
+        if(!shift) {
+            return next(new ApiError(404,"Không tìm thấy ca làm việc !"));
+        }
+        return res.send({massage: "Ca làm việc được cập nhật thành công!"});
+    }catch (error) {
+        return next(
+            new ApiError(500, `Đã xảy ra lỗi khi cập nhật ca làm việc với id = ${req.params.id}`)
+        );
+    }
     
-// };
-
-// //Delete a shift with the specified id in the request
-// exports.deleteShift = async (req, res, next) => {
-//     const shift = await Shift.findById(req.params.id);
-//     if(!shift){
-//         return next(new ApiError(404,"Ca làm việc không tồn tại!"));
-//     }
-//     try{
-//         await shift.remove();
-//             res.status(200).json({
-//             success: true,
-//             message: "Xóa ca làm việc thành công!"
-//         })
-//     }catch (error) {
-//         return next(
-//             new ApiError(500, "Đã xảy ra lỗi khi truy xuất ca làm việc.")
-//         );
-//     }
-    
-// };
-
-exports.createShift = (req, res) => {
-    res.send({ message: "create handler" });
 };
 
-exports.findAllShift = (req, res) => {
-    res.send({ message: "findAll handler" });
+//Delete a shift with the specified id in the request
+exports.deleteShift = async (req, res, next) => {
+    try{
+        const shiftManage = new ShiftManage(MongoDB.client);
+        const shift = await shiftManage.delete(req.params.id);
+
+        if(!shift){
+            return next(
+                new ApiError(404, "Không tìm thấy ca làm việc !")
+            );
+        }
+        return res.send({ message: "Ca làm việc đã được xóa thành công !" });
+    }catch(error){
+        return next(
+            new ApiError(500, `Không thể xóa ca làm việc có id=${req.params.id}`)
+        );
+    }
 };
 
-exports.findOneShift = (req, res) => {
-    res.send({ message: "findOne handler" });
-};
-
-exports.updateShift = (req, res) => {
-    res.send({ message: "update handler" });
-};
-
-
-exports.deleteShift = (req,  res) => {
-    res.send({ message: "delete handler" });
-};

@@ -3,11 +3,11 @@ const shift = require('../controllers/shift.controller');
 
 const router = express.Router();
 
-router.route('/shift')
+router.route('/')
     .post(shift.createShift)
     .get(shift.findAllShift);
 
-router.route('/shift/:id')
+router.route('/:id')
     .get(shift.findOneShift)
     .put(shift.updateShift)
     .delete(shift.deleteShift);
